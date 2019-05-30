@@ -1,0 +1,56 @@
+### 
+pg_basebackup -h 10.11.100.97 -D /var/lib/postgresql/9.3/data -U reppje2g -v -P --xlog-method=stream
+
+
+admdalton.oliveira
+
+sudo -i
+
+su - postgres
+
+psql
+
+select table_name from INFORMATION_SCHEMA.views WHERE TABLE_NAME = 'vw_pg_session';
+
+drop view public.vw_pg_session;
+
+exit
+
+cd /tmp/
+
+yum install  https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm -y
+
+yum install postgresql96-server postgresql96-contrib postgresql96-devel -y
+
+systemctl enable postgresql-9.6
+systemctl disable postgresql-9.3
+
+/usr/pgsql-9.6/bin/postgresql96-setup initdb
+
+/var/lib/pgsql/9.3/data/pg_hba.conf
+/var/lib/pgsql/9.3/data/pg_ident.conf
+
+
+mv /var/lib/pgsql/9.6/data/postgresql.conf  /var/lib/pgsql/9.6/data/postgresql.conf.old
+
+cp /var/lib/pgsql/9.3/data/postgresql.conf  /var/lib/pgsql/9.6/data/postgresql.conf
+
+vi  /var/lib/pgsql/9.6/data/postgresql.conf
+--altera a porta para 5433
+
+systemctl stop postgresql-9.3
+systemctl stop postgresql-9.6
+
+su - postgres
+
+/usr/pgsql-9.6/bin/pg_upgrade -c -d /var/lib/pgsql/9.3/data -D /var/lib/pgsql/9.6/data -b /usr/pgsql-9.3/bin -B /usr/pgsql-9.6/bin -k
+
+exit
+
+vi  /var/lib/pgsql/9.6/data/postgresql.conf
+--volta a porta para 5432
+
+rsync --archive --delete --hard-links --size-only --no-inc-recursive /var/lib/pgsql/9.3 /var/lib/pgsql/9.6 192.168.56.103:/var/lib/pgsql
+
+
+systemctl start postgresql-9.6

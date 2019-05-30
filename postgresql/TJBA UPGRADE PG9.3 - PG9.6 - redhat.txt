@@ -1,0 +1,103 @@
+2 grau
+
+pje2gdbp003 e pje2gdbp004.
+******************************
+
+admdalton.oliveira 
+usuario: root
+senha: 12qwpje09po
+
+Antes de inciar solicitar a Rodrigo a instalação do pg9.6
+
+*****************
+*****MASTER******
+*****************
+
+*****user admdalton.oliveira
+
+$sudo -i
+
+#su - postgres
+
+$ psql
+
+\c pje_2g
+
+select table_name from INFORMATION_SCHEMA.views WHERE TABLE_NAME = 'vw_pg_session';
+
+drop view public.vw_pg_session;
+
+\q
+
+$exit
+
+####Parar MASTER e SLAVE
+#systemctl stop postgresql-9.3
+
+#su - postgres
+
+$cp /var/lib/pgsql/9.3/data/pg_hba.conf /tmp/
+$cp /var/lib/pgsql/9.3/data/postgresql.conf /tmp/
+$cp /var/lib/pgsql/9.3/data/recovery.done /tmp/
+
+$/opt/rh/rh-postgresql96/root/bin/initdb -D /var/lib/pgsql/9.6/data
+
+$vi  /var/lib/pgsql/9.6/data/postgresql.conf
+--altera a porta para 5433
+
+$exit
+
+#ln -s /opt/rh/rh-postgresql96/root/usr/lib64/libpq.so.rh-postgresql96-5 /usr/lib64/libpq.so.rh-postgresql96-5 
+#ln -s /opt/rh/rh-postgresql96/root/usr/lib64/libpq.so.rh-postgresql96-5 /usr/lib/libpq.so.rh-postgresql96-5
+
+#su - postgres
+
+$/opt/rh/rh-postgresql96/root/bin/pg_upgrade -c -d /var/lib/pgsql/9.3/data -D /var/lib/pgsql/9.6/data -b /usr/pgsql-9.3/bin -B /opt/rh/rh-postgresql96/root/bin -k
+
+$rmdir  /var/opt/rh/rh-postgresql96/lib/pgsql/data/
+$ln -s /var/lib/pgsql/9.6/data  /var/opt/rh/rh-postgresql96/lib/pgsql/
+
+$cp /tmp/postgresql.conf  /var/lib/pgsql/9.6/data/postgresql.conf 
+$cp /tmp/pg_hba.conf  /var/lib/pgsql/9.6/data/pg_hba.conf
+
+###Comentar checkpoint_segments em postgresql.conf 
+$vi /var/lib/pgsql/9.6/data/postgresql.conf
+
+###Alterar pg_hba de md5 para trust
+$vi /var/lib/pgsql/9.6/data/pg_hba.conf
+
+#systemctl enable rh-postgresql96-postgresql
+#systemctl disable postgresql-9.3
+
+*****************
+*****SLAVE*******
+*****************
+
+###fazer backup dos arquivos de configuração do slave.
+$cp /var/lib/pgsql/9.3/data/pg_hba.conf /tmp/
+$cp /var/lib/pgsql/9.3/data/postgresql.conf /tmp/
+$cp /var/lib/pgsql/9.3/data/recovery.conf /tmp/
+
+$/opt/rh/rh-postgresql96/root/bin/pg_basebackup -h 10.10.1.71 -D /var/lib/postgresql/9.6/data -U reppje1g -v -P --xlog-method=stream
+
+$rmdir  /var/opt/rh/rh-postgresql96/lib/pgsql/data/
+$ln -s /var/lib/pgsql/9.6/data  /var/opt/rh/rh-postgresql96/lib/pgsql/
+
+###restaurar arquivos de configuração do slave.
+$cp /tmp/pg_hba.conf  /var/lib/pgsql/9.6/data/
+$cp /tmp/postgresql.conf  /var/lib/pgsql/9.6/data/
+$cp /tmp/recovery.conf  /var/lib/pgsql/9.6/data/
+
+###comentar checkpoint_segments em postgresql.conf 
+$vi /var/lib/pgsql/9.6/data/postgresql.conf
+
+
+#systemctl enable rh-postgresql96-postgresql
+#systemctl disable postgresql-9.3
+
+*****************
+*****MASTER******
+*****************
+
+###voltar pg_hba de trust para md5
+$vi /var/lib/pgsql/9.6/data/pg_hba.conf

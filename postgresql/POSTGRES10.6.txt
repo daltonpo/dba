@@ -1,0 +1,106 @@
+##Instalar RPMS do Postgresql 10.6
+
+# rpm -ihv rh-postgresql10-runtime-3.1-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-libs-10.6-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-10.6-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-contrib-10.6-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-devel-10.6-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-server-10.6-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-docs-10.6-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-plpython-10.6-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-pltcl-10.6-1.el7.x86_64.rpm
+# rpm -ihv rh-postgresql10-postgresql-static-10.6-1.el7.x86_64.rpm
+
+
+##Criar links
+# ln -s /opt/rh/rh-postgresql10/root/usr/lib64/libpq.so.rh-postgresql10-5 /usr/lib/libpq.so.rh-postgresql10-5
+# ln -s /opt/rh/rh-postgresql10/root/usr/lib64/libpq.so.rh-postgresql10-5 /usr/lib64/libpq.so.rh-postgresql10-5
+# ln -s /opt/rh/rh-postgresql96/root/usr/lib64/libpq.so.rh-postgresql96-5 /usr/lib64/libpq.so.rh-postgresql96-5
+# ln -s /opt/rh/rh-postgresql96/root/usr/lib64/libpq.so.rh-postgresql96-5 /usr/lib/libpq.so.rh-postgresql96-5
+
+
+##Parar postgres 9.6
+# systemctl status rh-postgresql96-postgresql.service
+# systemctl stop rh-postgresql96-postgresql.service
+# systemctl disable rh-postgresql96-postgresql
+
+
+##Criar o cluster
+$ mkdir -p /var/lib/postgresql/10.6/data
+$ /opt/rh/rh-postgresql10/root/bin/initdb -D /var/lib/postgresql/10.6/data
+
+##Criar links da pasta data
+$ rmdir /var/opt/rh/rh-postgresql10/lib/pgsql/data/
+$ ln -s /var/lib/postgresql/10.6/data /var/opt/rh/rh-postgresql10/lib/pgsql/
+
+
+##Alterar a porta para 5433
+$ vi /var/lib/postgresql/10.6/data/postgresql.conf
+
+
+##Fazer Backup dos arquivos de configuração
+cp /var/lib/postgresql/data/pg_hba.conf /tmp/
+cp /var/lib/postgresql/data/postgresql.conf /tmp/
+
+##Verificar Upgrade
+/opt/rh/rh-postgresql10/root/bin/pg_upgrade -c -d /var/lib/postgresql/data -D /var/lib/postgresql/10.6/data -b /opt/rh/rh-postgresql96/root/bin -B /opt/rh/rh-postgresql10/root/bin -k
+
+
+##Em caso de erro da base template2 executar os comandos abaixo no bacno de origem:
+SELECT datname, datallowconn FROM pg_database;
+UPDATE pg_database SET datallowconn='false' WHERE datname like 'template0';
+
+
+##Fazer o Upgrade
+/opt/rh/rh-postgresql10/root/bin/pg_upgrade -c -d /var/lib/postgresql/data -D /var/lib/postgresql/10.6/data -b /opt/rh/rh-postgresql96/root/bin -B /opt/rh/rh-postgresql10/root/bin -k
+
+
+##Restaurar arquivos de configuração.
+cp /tmp/pg_hba.conf /var/lib/postgresql/10.6/data/pg_hba.conf
+cp /tmp/postgresql.conf /var/lib/postgresql/10.6/data/postgresql.conf
+
+
+rm /usr/bin/psql
+rm /usr/bin/pg_basebackup
+rm /usr/bin/pg_dumpall
+rm /usr/bin/clusterdb
+rm /usr/bin/createdb
+rm /usr/bin/createlang
+rm /usr/bin/createuser
+rm /usr/bin/dropdb
+rm /usr/bin/droplang
+rm /usr/bin/dropuser
+rm /usr/bin/pg_restore
+rm /usr/bin/pg_upgrade
+rm /usr/bin/reindexdb
+rm /usr/bin/vacuumdb
+rm /usr/bin/pg_dump
+rm /usr/bin/pg_ctl
+rm /usr/bin/pg_controldata
+rm /usr/bin/pg_standby
+rm /usr/bin/pg_rewind
+rm /usr/bin/pg_resetxlog
+
+ln -s /opt/rh/rh-postgresql10/root/bin/psql /usr/bin/psql
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_basebackup /usr/bin/pg_basebackup
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_dumpall /usr/bin/pg_dumpall
+ln -s /opt/rh/rh-postgresql10/root/bin/clusterdb /usr/bin/clusterdb
+ln -s /opt/rh/rh-postgresql10/root/bin/createdb /usr/bin/createdb
+ln -s /opt/rh/rh-postgresql10/root/bin/createlang /usr/bin/createlang
+ln -s /opt/rh/rh-postgresql10/root/bin/createuser /usr/bin/createuser
+ln -s /opt/rh/rh-postgresql10/root/bin/dropdb /usr/bin/dropdb
+ln -s /opt/rh/rh-postgresql10/root/bin/droplang /usr/bin/droplang
+ln -s /opt/rh/rh-postgresql10/root/bin/dropuser /usr/bin/dropuser
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_restore /usr/bin/pg_restore
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_upgrade /usr/bin/pg_upgrade
+ln -s /opt/rh/rh-postgresql10/root/bin/reindexdb /usr/bin/reindexdb
+ln -s /opt/rh/rh-postgresql10/root/bin/vacuumdb /usr/bin/vacuumdb
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_dump /usr/bin/pg_dump
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_ctl /usr/bin/pg_ctl
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_controldata /usr/bin/pg_controldata
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_standby /usr/bin/pg_standby
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_rewind /usr/bin/pg_rewind
+ln -s /opt/rh/rh-postgresql10/root/bin/pg_resetxlog /usr/bin/pg_resetxlog
+
+
+#Testar .....
